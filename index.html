@@ -152,6 +152,16 @@
 
         // Список проверок
         check: {
+            'empty': function(form, value, param) {
+                var val = value;
+                if ('selector' in param) {
+                    val = form.find(param.selector).val();
+                }
+                return $.isEmptyObject(val);
+            },
+            '!empty': function(form, value, param) {
+                return !formValidator.check['empty'](form, value, param);
+            },
             '==': function(form, value, param) {
                 return formValidator.checkPrototype.checkCompare(form, value, param, '==');
             },
@@ -323,6 +333,19 @@
             }
         },
         'message': 'Message for all checks for field f1'
+    });
+    filter.push({
+        // Селектор поля
+        'selector': '#f3',
+        // Список проверок для поля
+        'check_list': {
+            0: {
+                // Тип проверки
+                'type': '!empty',
+                // Сообщение для этой проверки
+                'message': 'F3 Пустое'
+            }
+        }
     });
     $(function() {
         formValidator.init($('form'), filter);
