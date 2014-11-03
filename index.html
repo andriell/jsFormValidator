@@ -32,17 +32,73 @@
             if (!('log' in console)) {
                 return;
             }
-
             console.log({
                 'type': type,
                 'param': param
             });
-
         },
 
         // Протопиты для проверок
         checkPrototype: {
-            compare: function(form, value, param, operation) {
+            /**
+             * Сравнение
+             * @param val1
+             * @param operation
+             * @param val2
+             * @returns {boolean}
+             */
+            compare: function(val1, operation, val2) {
+                if (operation == '==') {
+                    return val1 == val2;
+                } else if (operation == '>') {
+                    return val1 > val2;
+                } else if (operation == '>=') {
+                    return val1 >= val2;
+                } else if (operation == '<') {
+                    return val1 < val2;
+                } else if (operation == '<=') {
+                    return val1 <= val2;
+                } else if (operation == '!=') {
+                    return val1 != val2;
+                }
+                return false;
+            },
+            /**
+             * Суммирование
+             * @param form
+             * @param sumList = ['[selector1]', '+', '[selector2]', '-', '[selector3]']
+             * @returns {*}
+             */
+            sum: function(form, sumList) {
+                var result = 0;
+                var operation = '+';
+                for(var i in sumList) {
+                    if (sumList[i] == '+' || sumList[i] == '-') {
+                        operation = sumList[i];
+                        continue;
+                    }
+                    var val = form.find(sumList[i]).val();
+                    val = Number(val);
+                    if (isNaN(val)) {
+                        return false;
+                    }
+                    if (operation == '-') {
+                        result -= val;
+                    } else {
+                        result += val;
+                    }
+                }
+                return result;
+            },
+            /**
+             * Проверка сравнение
+             * @param form
+             * @param value
+             * @param param
+             * @param operation
+             * @returns {boolean}
+             */
+            checkCompare: function(form, value, param, operation) {
                 formValidator.log('compare', [value, param, operation]);
                 value = Number(value);
                 if (isNaN(value)) {
@@ -50,7 +106,7 @@
                 }
                 var val = 0;
                 if ('selector' in param) {
-                    val = $(param.selector).val();
+                    val = form.find(param.selector).val();
                 } else if ('value' in param) {
                     val = param.value;
                 }
@@ -59,42 +115,76 @@
                 if (isNaN(val)) {
                     return false;
                 }
-                if (operation == '==') {
-                    return value == val;
-                } else if (operation == '>') {
-                    return value > val;
-                } else if (operation == '>=') {
-                    return value >= val;
-                } else if (operation == '<') {
-                    return value < val;
-                } else if (operation == '<=') {
-                    return value <= val;
-                } else if (operation == '!=') {
-                    return value != val;
+                return formValidator.compare(value, operation, val);
+            },
+            /**
+             * Сравнение двух сумм
+             * @param form
+             * @param param
+             * @param operation
+             * @returns {boolean}
+             */
+            checkCompareSum: function(form, param, operation) {
+                if (!('sum1' in param)) {
+                    return false;
                 }
-                return false;
+                if (!('sum2' in param)) {
+                    return false;
+                }
+                var sum1 = formValidator.checkPrototype.sum(form, param['sum1']);
+                if (sum1 === false) {
+                    return false;
+                }
+                var sum2 = formValidator.checkPrototype.sum(form, param['sum2']);
+                if (sum2 === false) {
+                    return false;
+                }
+                return formValidator.compare(sum1, operation, sum2);
+            },
+            // Регулярное выражение
+            regExp: function(form, value, regExp) {
+                var expr = new RegExp(regExp);
+                return expr.match(value);
             }
         },
 
         // Список проверок
         check: {
             '==': function(form, value, param) {
-                return formValidator.checkPrototype.compare(form, value, param, '==');
+                return formValidator.checkPrototype.checkCompare(form, value, param, '==');
             },
             '!=': function(form, value, param) {
-                return formValidator.checkPrototype.compare(form, value, param, '!=');
+                return formValidator.checkPrototype.checkCompare(form, value, param, '!=');
             },
             '>': function(form, value, param) {
-                return formValidator.checkPrototype.compare(form, value, param, '>');
+                return formValidator.checkPrototype.checkCompare(form, value, param, '>');
             },
             '>=': function(form, value, param) {
-                return formValidator.checkPrototype.compare(form, value, param, '>=');
+                return formValidator.checkPrototype.checkCompare(form, value, param, '>=');
             },
             '<': function(form, value, param) {
-                return formValidator.checkPrototype.compare(form, value, param, '<');
+                return formValidator.checkPrototype.checkCompare(form, value, param, '<');
             },
             '<=': function(form, value, param) {
-                return formValidator.checkPrototype.compare(form, value, param, '<=');
+                return formValidator.checkPrototype.checkCompare(form, value, param, '<=');
+            },
+            'sum1==sum2': function(form, value, param) {
+                return formValidator.checkPrototype.checkCompareSum(form, param, '==');
+            },
+            'sum1!=sum2': function(form, value, param) {
+                return formValidator.checkPrototype.checkCompareSum(form, param, '!=');
+            },
+            'sum1>sum2': function(form, value, param) {
+                return formValidator.checkPrototype.checkCompareSum(form, param, '>');
+            },
+            'sum1>=sum2': function(form, value, param) {
+                return formValidator.checkPrototype.checkCompareSum(form, param, '>=');
+            },
+            'sum1<sum2': function(form, value, param) {
+                return formValidator.checkPrototype.checkCompareSum(form, param, '<');
+            },
+            'sum1<=sum2': function(form, value, param) {
+                return formValidator.checkPrototype.checkCompareSum(form, param, '<=');
             }
         },
 
