@@ -19,9 +19,13 @@
 <script type="text/javascript">
 
     var formValidator = {
+        debug: true,
         errorClass: 'form-error',
 
         log: function(type, param) {
+            if (!formValidator.debug) {
+                return;
+            }
             if (typeof (console) != 'object') {
                 return;
             }
@@ -39,8 +43,7 @@
         // Протопиты для проверок
         checkPrototype: {
             compare: function(form, value, param, operation) {
-                //formValidator.log('compare', [value, param, operation]);
-
+                formValidator.log('compare', [value, param, operation]);
                 value = Number(value);
                 if (isNaN(value)) {
                     return false;
@@ -52,6 +55,7 @@
                     val = param.value;
                 }
                 val = Number(val);
+                formValidator.log('compare_val', val);
                 if (isNaN(val)) {
                     return false;
                 }
@@ -75,22 +79,22 @@
         // Список проверок
         check: {
             '==': function(form, value, param) {
-                formValidator.checkPrototype.compare(form, value, param, '==');
+                return formValidator.checkPrototype.compare(form, value, param, '==');
             },
             '!=': function(form, value, param) {
-                formValidator.checkPrototype.compare(form, value, param, '!=');
+                return formValidator.checkPrototype.compare(form, value, param, '!=');
             },
             '>': function(form, value, param) {
-                formValidator.checkPrototype.compare(form, value, param, '>');
+                return formValidator.checkPrototype.compare(form, value, param, '>');
             },
             '>=': function(form, value, param) {
-                formValidator.checkPrototype.compare(form, value, param, '>=');
+                return formValidator.checkPrototype.compare(form, value, param, '>=');
             },
             '<': function(form, value, param) {
-                formValidator.checkPrototype.compare(form, value, param, '<');
+                return formValidator.checkPrototype.compare(form, value, param, '<');
             },
             '<=': function(form, value, param) {
-                formValidator.checkPrototype.compare(form, value, param, '<=');
+                return formValidator.checkPrototype.compare(form, value, param, '<=');
             }
         },
 
@@ -98,7 +102,7 @@
             // Скрывем старые сообщения об ошибках
             form.find('.js-form-error').remove();
             // Результат проверки
-            var result = false;
+            var result = true;
             // Перебор всех фильтров
             for (var i in filter) {
                 if (!('selector' in filter[i])) {
@@ -145,7 +149,7 @@
                 });
             }
 
-            return result;
+            return result && !formValidator.debug;
         },
 
         // Добвить сообщение об ошибке
@@ -180,7 +184,7 @@
                             'selector': '#f2'
                         },
                         // Сообщение для этой проверки
-                        'message': 'm1'
+                        'message': 'F1 Не больше F2'
                     },
                     1: {
                         // Тип проверки
@@ -190,7 +194,7 @@
                             'value': 10
                         },
                         // Сообщение для этой проверки
-                        'message': 'm1'
+                        'message': 'F1 Не больше 10'
                     }
                 },
                 'message': 'Message for all checks for field f1'
