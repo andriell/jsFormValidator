@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <script src="js/jquery-2.1.1.min.js"></script>
+    <script src="formValidator.js"></script>
+    <title></title>
+</head>
+<body>
+
+<form>
+    <p><label for="f1">F1</label><input id="f1" type="text"></p>
+    <p><label for="f2">F2</label><input id="f2" type="text"></p>
+    <p><label for="f3">F3</label><input id="f3" type="text"></p>
+    <p><label for="f4">F4</label><input id="f4" type="text"></p>
+    <p><input type="submit" value="Submit"></p>
+
+</form>
+<script type="text/javascript">
+
+    var formValidator = {
+        kSelector: 'selector',
+        kCheck: 'check',
+        kErrorMessage: 'errorMessage',
+
+        log: function(type, param) {
+            if (typeof (console) != 'object') {
+                return;
+            }
+            if (!('log' in console)) {
+                return;
+            }
+
+            console.log({
+                'type': type,
+                'param': param
+            });
+
+        },
+
+        // Протопиты для проверок
+        checkPrototype: {
+            compare: function(form, value, param, operation) {
+                //formValidator.log('compare', [value, param, operation]);
+
+                value = Number(value);
+                if (isNaN(value)) {
+                    return false;
+                }
+                var val = 0;
+                if ('selector' in param) {
+                    val = $(param.selector).val();
+                } else if ('value' in param) {
+                    val = param.value;
+                }
+                val = Number(val);
+                if (isNaN(val)) {
+                    return false;
+                }
+                if (operation == '==') {
+                    return value == val;
+                } else if (operation == '>') {
+                    return value > val;
+                } else if (operation == '>=') {
+                    return value >= val;
+                } else if (operation == '<') {
+                    return value < val;
+                } else if (operation == '<=') {
+                    return value <= val;
+                } else if (operation == '!=') {
+                    return value != val;
+                }
+                return false;
+            }
+        },
+
+        // Список проверок
+        check: {
+            '==': function(form, value, param) {
+                formValidator.checkPrototype.compare(form, value, param, '==');
+            },
+            '!=': function(form, value, param) {
+                formValidator.checkPrototype.compare(form, value, param, '!=');
+            },
+            '>': function(form, value, param) {
+                formValidator.checkPrototype.compare(form, value, param, '>');
+            },
+            '>=': function(form, value, param) {
+                formValidator.checkPrototype.compare(form, value, param, '>=');
+            },
+            '<': function(form, value, param) {
+                formValidator.checkPrototype.compare(form, value, param, '<');
+            },
+            '<=': function(form, value, param) {
+                formValidator.checkPrototype.compare(form, value, param, '<=');
+            }
+        },
+
+        submit: function(form, filter) {
+            var result = false;
+            // Перебор всех фильтров
+            for (var i in filter) {
+                if (!('selector' in filter[i])) {
+                    continue;
+                }
+                if (!('check_list' in filter[i])) {
+                    continue;
+                }
+
+                var element = form.find(filter[i].selector);
+                if (s.isEmptyObject(element)) {
+                    continue;
+                }
+
+                // Элемент из фильтра нашелся
+                element.each(function() {
+                    var element = $(this);
+                    // Перебор всех проверок для элемента
+                    for (var j in filter[i]['check_list']) {
+                        var check = filter[i]['check_list'][j];
+                        if (!('type' in check)) {
+                            continue;
+                        }
+                        if (!(check.type in formValidator.check)) {
+                            continue;
+                        }
+                        var param = {};
+                        if ('param' in check) {
+                            param = check.param;
+                        }
+                        var value = element.val();
+                        // Выполняется сама проверка
+                        var checkResult = formValidator.check[check.type](form, value, param);
+                        if (!checkResult) {
+                            result = false;
+                        }
+                    }
+                });
+            }
+
+            return result;
+        },
+
+        // Начать проверять форму
+        init: function(form, filter) {
+            form = $(form);
+            form.on('submit', function() {
+
+                console.info(1);
+                return formValidator.submit(form, filter);
+            });
+
+        }
+    };
+
+    $(function() {
+        formValidator.init($('form'), {
+            // поле
+            0: {
+                // Селектор поля
+                'selector': '#f1',
+                // Список проверок для поля
+                'check_list': {
+                    0: {
+                        // Тип проверки
+                        'type': '>',
+                        // Параметры проверки
+                        'param': {
+                            'selector': '#f2'
+                        },
+                        // Сообщение для этой проверки
+                        'message': 'm1'
+                    },
+                    1: {
+                        // Тип проверки
+                        'type': '>',
+                        // Параметры проверки
+                        'param': {
+                            'value': 10
+                        },
+                        // Сообщение для этой проверки
+                        'message': 'm1'
+                    }
+                },
+                'message': 'Message for all checks for field f1'
+            }
+        });
+    });
+
+</script>
+</body>
+</html>
