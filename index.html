@@ -19,9 +19,7 @@
 <script type="text/javascript">
 
     var formValidator = {
-        kSelector: 'selector',
-        kCheck: 'check',
-        kErrorMessage: 'errorMessage',
+        errorClass: 'form-error',
 
         log: function(type, param) {
             if (typeof (console) != 'object') {
@@ -97,6 +95,9 @@
         },
 
         submit: function(form, filter) {
+            // Скрывем старые сообщения об ошибках
+            form.find('.js-form-error').remove();
+            // Результат проверки
             var result = false;
             // Перебор всех фильтров
             for (var i in filter) {
@@ -106,15 +107,13 @@
                 if (!('check_list' in filter[i])) {
                     continue;
                 }
-
                 var element = form.find(filter[i].selector);
-                if (s.isEmptyObject(element)) {
+                if ($.isEmptyObject(element)) {
                     continue;
                 }
-
                 // Элемент из фильтра нашелся
                 element.each(function() {
-                    var element = $(this);
+                    var input = $(this);
                     // Перебор всех проверок для элемента
                     for (var j in filter[i]['check_list']) {
                         var check = filter[i]['check_list'][j];
@@ -128,11 +127,19 @@
                         if ('param' in check) {
                             param = check.param;
                         }
-                        var value = element.val();
+                        var value = input.val();
                         // Выполняется сама проверка
                         var checkResult = formValidator.check[check.type](form, value, param);
                         if (!checkResult) {
+                            var errorMessage = 'Error';
+                            if ('message' in check) {
+                                errorMessage = check.message;
+                            } else if ('message' in filter[i]) {
+                                errorMessage = filter[i].message;
+                            }
+                            formValidator.addError(input, errorMessage);
                             result = false;
+                            break;
                         }
                     }
                 });
@@ -141,12 +148,16 @@
             return result;
         },
 
+        // Добвить сообщение об ошибке
+        addError: function(input, errorMessage) {
+            var html = '<span class="js-form-error ' + formValidator.errorClass + '">' + errorMessage + '</span>';
+            input.after(html);
+        },
+
         // Начать проверять форму
         init: function(form, filter) {
             form = $(form);
             form.on('submit', function() {
-
-                console.info(1);
                 return formValidator.submit(form, filter);
             });
 
