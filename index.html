@@ -70,6 +70,7 @@
              * @returns {*}
              */
             sum: function(form, sumList) {
+                formValidator.log('sum', sumList);
                 var result = 0;
                 var operation = '+';
                 for(var i in sumList) {
@@ -115,7 +116,7 @@
                 if (isNaN(val)) {
                     return false;
                 }
-                return formValidator.compare(value, operation, val);
+                return formValidator.checkPrototype.compare(value, operation, val);
             },
             /**
              * Сравнение двух сумм
@@ -139,7 +140,8 @@
                 if (sum2 === false) {
                     return false;
                 }
-                return formValidator.compare(sum1, operation, sum2);
+                formValidator.log('checkCompareSum', [param, operation]);
+                return formValidator.checkPrototype.compare(sum1, operation, sum2);
             },
             // Регулярное выражение
             regExp: function(form, value, regExp) {
@@ -252,7 +254,12 @@
         init: function(form, filter) {
             form = $(form);
             form.on('submit', function() {
-                return formValidator.submit(form, filter);
+                try {
+                    return formValidator.submit(form, filter);
+                } catch (e) {
+                    form.attr('action', '#');
+                    throw e;
+                }
             });
 
         }
@@ -297,7 +304,7 @@
                 'type': 'sum1>=sum2',
                 // Параметры проверки
                 'param': {
-                    'sum1': '#f2',
+                    'sum1': ['#f2'],
                     'sum2': ['#f3', '+', '#f4']
                 },
                 // Сообщение для этой проверки
@@ -308,7 +315,7 @@
                 'type': 'sum1>=sum2',
                 // Параметры проверки
                 'param': {
-                    'sum1': '#f2',
+                    'sum1': ['#f2'],
                     'sum2': ['#f1', '-', '#f4']
                 },
                 // Сообщение для этой проверки
