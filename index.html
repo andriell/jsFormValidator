@@ -13,13 +13,14 @@
     <p><label for="f2">F2</label><input id="f2" type="text"></p>
     <p><label for="f3">F3</label><input id="f3" type="text"></p>
     <p><label for="f4">F4</label><input id="f4" type="text"></p>
+    <p><label for="date">date</label><input id="date" type="text"></p>
     <p><input type="submit" value="Submit"></p>
 
 </form>
 <script type="text/javascript">
 
     var formValidator = {
-        debug: true,
+        debug: false,
         errorClass: 'form-error',
 
         log: function(type, param) {
@@ -144,9 +145,15 @@
                 return formValidator.checkPrototype.compare(sum1, operation, sum2);
             },
             // Регулярное выражение
-            regExp: function(form, value, regExp) {
-                var expr = new RegExp(regExp);
-                return expr.match(value);
+            regExp: function(form, value, regExp, flags) {
+                value = String(value);
+                var expr;
+                if ($.isEmptyObject(flags)) {
+                    expr = new RegExp(regExp);
+                } else {
+                    expr = new RegExp(regExp, flags);
+                }
+                return value.match(expr);
             }
         },
 
@@ -197,6 +204,9 @@
             },
             'sum1<=sum2': function(form, value, param) {
                 return formValidator.checkPrototype.checkCompareSum(form, param, '<=');
+            },
+            'YYYY.MM.DD': function(form, value, param) {
+                return formValidator.checkPrototype.regExp(form, value, '^[0-9]{4}\\.(0[1-9]|1[0-2])\\.(0[1-9]|[1-2][0-9]|3[0-1])$');
             }
         },
 
@@ -347,7 +357,21 @@
             }
         }
     });
+    filter.push({
+        // Селектор поля
+        'selector': '#date',
+        // Список проверок для поля
+        'check_list': {
+            0: {
+                // Тип проверки
+                'type': 'YYYY.MM.DD',
+                // Сообщение для этой проверки
+                'message': 'Не YYYY.MM.DD'
+            }
+        }
+    });
     $(function() {
+        formValidator.debug = true;
         formValidator.init($('form'), filter);
     });
 
